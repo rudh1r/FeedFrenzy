@@ -81,6 +81,7 @@ let currentThreatLevel = 0;
 const keys = {};
 const mouse = { x: 0, y: 0, down: false };
 let joystick = { active: false, x: 0, y: 0, originX: 0, originY: 0, dx: 0, dy: 0 };
+let aimJoystick = { active: false, dx: 0, dy: 0 };
 let isMobileShooting = false;
 
 // --- INITIALIZATION ---
@@ -234,19 +235,29 @@ function setupMobileControls() {
     window.addEventListener('mousemove', e => { if(joystick.active) handleJoystickMove(e.clientX, e.clientY); });
     window.addEventListener('mouseup', e => { if(joystick.active) handleJoystickEnd(); });
 
-    const startShoot = (e) => { if(e.cancelable) e.preventDefault(); isMobileShooting = true; shootBtn.style.transform = "scale(0.9)"; shootBtn.style.background = "rgba(255, 0, 80, 0.8)"; };
-    const endShoot = (e) => { if(e.cancelable) e.preventDefault(); isMobileShooting = false; shootBtn.style.transform = "scale(1)"; shootBtn.style.background = "rgba(255, 0, 80, 0.3)"; };
+    // --- Aim & Shoot Joystick Logic ---
+    const handleAimStart = (e) => {
+        if(e.cancelable) e.preventDefault();
+        aimJoystick.active = true;
+        isMobileShooting = true;
+        shootBtn.style.transform = "scale(0.9)";
+        shootBtn.style.background = "rgba(255, 0, 80, 0.8)";
+    };
 
-    shootBtn.addEventListener('touchstart', startShoot, {passive: false});
-    shootBtn.addEventListener('touchend', endShoot);
-    shootBtn.addEventListener('touchcancel', endShoot);
-    shootBtn.addEventListener('mousedown', startShoot);
-    shootBtn.addEventListener('mouseup', endShoot);
-    shootBtn.addEventListener('mouseleave', endShoot);
+    const handleAimEnd = (e) => {
+        if(e.cancelable) e.preventDefault();
+        aimJoystick.active = false;
+        isMobileShooting = false;
+        shootBtn.style.transform = "scale(1)";
+        shootBtn.style.background = "rgba(255, 0, 80, 0.3)";
+    };
+
+    shootBtn.addEventListener('touchstart', handleAimStart, {passive: false});
+    shootBtn.addEventListener('touchend', handleAimEnd, {passive: false});
+    shootBtn.addEventListener('touchcancel', handleAimEnd, {passive: false});
 
     const triggerUlt = (e) => { if(e.cancelable) e.preventDefault(); if(player.ultCharge >= 100) activateSpecial(); };
     ultBtn.addEventListener('touchstart', triggerUlt, {passive: false});
-    ultBtn.addEventListener('mousedown', triggerUlt);
 }
 
 function resize() {
@@ -647,8 +658,12 @@ function getAimAngle() {
         if (d < minDist) { minDist = d; nearest = e; }
     });
     if (nearest && minDist < 700) return Math.atan2(nearest.y - player.y, nearest.x - player.x);
-    if (joystick.active) return Math.atan2(joystick.dy, joystick.dx);
-    else { const worldMouseX = mouse.x + camera.x; const worldMouseY = mouse.y + camera.y; return Math.atan2(worldMouseY - player.y, worldMouseX - player.x); }
+        if (aimJoystick.active) {
+            // If the right stick is active but not moved, shoot forward relative to player movement
+            if (joystick.dx !== 0 || joystick.dy !== 0) return Math.atan2(joystick.dy, joystick.dx);
+            return 0; // Default to right if not moving
+        }
+        const worldMouseX = mouse.x + camera.x; const worldMouseY = mouse.y + camera.y; return Math.atan2(worldMouseY - player.y, worldMouseX - player.x);
 }
 
 function shoot() {

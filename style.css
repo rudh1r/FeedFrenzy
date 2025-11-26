@@ -212,3 +212,23 @@ h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; color: #fff; lett
 
 @media (hover: none) and (pointer: coarse) { #mobile-controls { display: block; } }
 @media (max-width: 1024px) { #mobile-controls { display: block; } }
+
+/* --- ORIENTATION LOCK --- */
+#rotate-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--bg-dark);
+    color: white;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 1000;
+    font-family: 'Rajdhani', sans-serif;
+}
+#rotate-overlay i { font-size: 5rem; margin-bottom: 20px; }
+
+@media (orientation: portrait) and (max-width: 1024px) {
+    #rotate-overlay { display: flex; }
+    #game-container { display: none; }
+}
