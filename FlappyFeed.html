@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Feed Frenzy: Cyber Feed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div id="hud-container">
+                <div class="hud-panel"><span style="font-weight:900; color:var(--secondary); font-size:0.8rem;">HP</span><div class="bar-container"><div id="hp-bar" class="hp-fill"></div></div></div>
+                <div class="hud-panel"><span style="font-weight:900; color:var(--special); font-size:0.8rem;">ULT</span><div class="bar-container"><div id="ult-bar" class="ult-fill"></div></div></div>
+                <div class="hud-panel"><div><span class="score-label">Likes</span><span id="game-likes" class="score-display">0</span></div></div>
+                <div class="hud-panel" style="padding: 5px 10px; background: rgba(29, 155, 240, 0.2); border-color: rgba(29, 155, 240, 0.4);"><span id="current-trend-hud" style="color: #1d9bf0; font-weight: 700; font-size: 0.8rem;">#DefaultFeed</span></div>
+            </div>
+            <div id="boost-container" class="active-boosts"></div>
+            <div id="pc-ult-hint" style="position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); color: var(--special); font-weight: 900; font-size: 1.5rem; text-shadow: 0 0 20px var(--special); display: none;">PRESS 'E' FOR SPECIAL</div>
+            <div class="pause-btn"><i class="fa-solid fa-pause"></i></div>
+            <div id="mobile-controls">
+                <div id="joystick-base" class="joystick-zone"><div id="joystick-knob" class="joystick-knob"></div></div>
+                <div id="shoot-btn" class="action-btn shoot-btn"><i class="fa-solid fa-crosshairs"></i></div>
+                <div id="ult-btn" class="action-btn ult-btn"><i class="fa-solid fa-bolt"></i></div>
+            </div>
+        </div>
+
+        <!-- MAIN MENU -->
+        <div id="main-menu" class="overlay">
+            <div class="panel">
+                <h1>FEED FRENZY</h1>
+                <p style="color:#888; font-family:'Inter'; margin-bottom: 20px; letter-spacing: 0.5px;">CYBERNETIC WARFARE // SOCIAL FEED</p>
+                <p style="color:#00f2ea; font-size: 0.8rem; margin-bottom: 10px;">PC: WASD Move + SPACE Shoot + E Special + ESC Pause</p>
+                <div class="currency-pill"><span><i class="fa-solid fa-gem"></i></span> <span id="total-currency">0</span></div>
+                <div class="btn-group">
+                    <button class="btn btn-primary"><i class="fa-solid fa-play"></i> DEPLOY</button>
+                    <button class="btn"><i class="fa-solid fa-gun"></i> ARMORY</button>
+                    <button class="btn"><i class="fa-solid fa-user-group"></i> OPERATORS</button>
+                    <button class="btn"><i class="fa-solid fa-wand-magic-sparkles"></i> HACK FEED</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TREND GENERATOR -->
+        <div id="trend-menu" class="overlay hidden">
+            <div class="panel">
+                <h2 style="background: linear-gradient(45deg, #FF00FF, #00FFFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">VIRAL CODE INJECTOR</h2>
+                <p style="color:#aaa; margin-bottom: 15px; font-family:'Inter'; font-size:0.9rem;">Inject a topic into the global feed algorithm.</p>
+                <input type="text" id="trend-input" class="ai-input" placeholder="Ex: Cats, Politics..." maxlength="30">
+                <div id="trend-status" style="height: 20px; color: var(--primary); font-weight:bold; margin-bottom: 10px; font-size:0.9rem;"></div>
+                <div class="btn-group">
+                    <button class="btn btn-magic">EXECUTE</button>
+                    <button class="btn">ABORT</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHARACTER SELECT -->
+        <div id="char-select" class="overlay hidden">
+            <div class="panel">
+                <h2>SELECT OPERATOR</h2>
+                <div style="color: #aaa; font-size: 0.9rem; margin-bottom: 10px;">Select to view Special Ability</div>
+                <div id="char-list" class="selection-grid"></div>
+                <div id="char-ability-desc" style="color: var(--special); font-weight: bold; margin-bottom: 20px; height: 20px;"></div>
+                <button class="btn">CONFIRM</button>
+            </div>
+        </div>
+
+        <!-- PAUSE MENU -->
+        <div id="pause-menu" class="overlay hidden">
+            <div class="panel">
+                <h2>SYSTEM PAUSED</h2>
+                <p style="color:#888; margin-bottom: 20px;">Mission Suspended</p>
+                <div class="btn-group" style="flex-direction: column; align-items: center;">
+                    <button class="btn btn-primary" style="width: 200px;">RESUME</button>
+                    <button class="btn" style="width: 200px;">ABORT MISSION</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GUN STORE -->
+        <div id="gun-store" class="overlay hidden">
+            <div class="panel">
+                <h2>ARMORY</h2>
+                <div class="currency-pill"><i class="fa-solid fa-gem"></i> <span id="store-currency">0</span></div>
+                <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 12px; margin-bottom: 15px; border-left: 3px solid var(--primary); text-align: left;">
+                    <span style="font-weight: bold; color: var(--primary); font-size: 0.8rem;"><i class="fa-solid fa-robot"></i> VENDOR SYSTEM:</span>
+                    <span id="shopkeeper-msg" style="color: #ddd; font-style: italic; font-family:'Inter'; font-size:0.9rem;">"Connecting..."</span>
+                </div>
+                <div id="store-list" class="shop-grid"></div>
+                <button class="btn">EXIT</button>
+            </div>
+        </div>
+
+        <!-- GAME OVER -->
+        <div id="game-over" class="overlay hidden">
+            <div class="panel">
+                <h1 style="font-size: 3rem; background: linear-gradient(to bottom, #ff4d4d, #990000); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 20px rgba(255,0,0,0.5);">CRITICAL FAILURE</h1>
+                <p style="font-size: 1rem; color: #fff;">Connection Terminated</p>
+                <h2 style="margin: 15px 0;">Likes Earned: <span id="run-score" style="color:var(--primary)">0</span></h2>
+                <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 12px; margin: 15px 0; border: 1px solid rgba(255,255,255,0.1); position: relative;">
+                    <div style="position: absolute; top: -10px; left: 20px; background: #000; padding: 0 10px; color: #888; font-size: 0.7rem; font-weight: bold;">ANALYSIS</div>
+                    <p id="roast-text" style="color: #fff; font-family:'Inter'; font-style: italic; font-size: 0.9rem;">Calibrating insult module...</p>
+                </div>
+                <button class="btn btn-primary">SYSTEM REBOOT</button>
+            </div>
+        </div>
+
+        <div id="toast" style="position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 50px; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 100; font-weight: bold;"></div>
+    </div>
+
+<script src="script.js"></script>
+</body>
+</html>
