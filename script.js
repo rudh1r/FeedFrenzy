@@ -55,9 +55,7 @@ let currency = parseInt(localStorage.getItem('fs_currency')) || 0;
 let unlockedWeapons = JSON.parse(localStorage.getItem('fs_weapons')) || ['pistol'];
 let selectedCharIdx = parseInt(localStorage.getItem('fs_char')) || 0;
 let selectedWeaponId = localStorage.getItem('fs_loadout') || 'pistol';
-
-let currentTrend = "DefaultFeed";
-let activeTweets = [...DEFAULT_TWEETS];
+let highScores = JSON.parse(localStorage.getItem('fs_highscores')) || [];
 
 let canvas, ctx;
 let gameState = 'MENU';
@@ -104,9 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('#main-menu .btn-primary').onclick = startGame;
     document.querySelector('#main-menu button:nth-of-type(2)').onclick = openStore;
     document.querySelector('#main-menu button:nth-of-type(3)').onclick = openCharSelect;
-    document.querySelector('#main-menu button:nth-of-type(4)').onclick = openTrendGen;
-    document.querySelector('#trend-menu .btn-magic').onclick = generateTrend;
-    document.querySelector('#trend-menu .btn:last-of-type').onclick = closeOverlay;
+    document.querySelector('#main-menu button:nth-of-type(4)').onclick = openLeaderboard;
+    document.querySelector('#leaderboard-menu .btn').onclick = closeOverlay;
     document.querySelector('#char-select .btn').onclick = closeOverlay;
     document.querySelector('#gun-store .btn').onclick = closeOverlay;
     document.querySelector('#pause-menu .btn-primary').onclick = togglePause;
@@ -330,8 +327,6 @@ function startGame() {
     document.getElementById('ult-btn').style.display = 'none';
     document.getElementById('pc-ult-hint').style.display = 'none';
     document.getElementById('game-likes').innerText = '0';
-    document.getElementById('boost-container').innerHTML = '';
-    document.getElementById('current-trend-hud').innerText = "#" + currentTrend.replace(/\s/g, '');
 
     showToast("THREAT LEVEL 1: SURVIVE");
 }
@@ -941,7 +936,6 @@ function gameOver() {
     document.getElementById('hud').classList.add('hidden');
     document.getElementById('game-over').classList.remove('hidden');
     document.getElementById('run-score').innerText = Math.floor(score);
-    currency += Math.floor(score);
     saveGame(); updateUI();
     generateRoast(Math.floor(score));
 }
@@ -951,7 +945,6 @@ function returnToMenu() {
     document.getElementById('game-over').classList.add('hidden');
     document.getElementById('pause-menu').classList.add('hidden');
     document.getElementById('hud').classList.add('hidden');
-    document.getElementById('main-menu').classList.remove('hidden');
     gameState = 'MENU';
     updateUI();
 }
@@ -1003,28 +996,28 @@ function openStore() {
     document.getElementById('gun-store').classList.remove('hidden');
 }
 
-function openTrendGen() { document.getElementById('main-menu').classList.add('hidden'); document.getElementById('trend-menu').classList.remove('hidden'); document.getElementById('trend-status').innerText = ""; }
+function openLeaderboard() {
+    const list = document.getElementById('leaderboard-list');
+    list.innerHTML = ''; // Clear previous list
 
-async function generateTrend() {
-    const input = document.getElementById('trend-input').value.trim(); if (!input) return;
-    const btn = document.querySelector('#trend-menu .btn-magic') || document.querySelector('#trend-menu .btn');
-    const status = document.getElementById('trend-status');
-    btn.disabled = true; btn.style.opacity = 0.5; status.innerText = "INJECTING VIRAL CODE...";
+    if (highScores.length === 0) {
+        list.innerHTML = '<p style="color: #888;">No scores yet. Be the first!</p>';
+    } else {
+        highScores.forEach((score, index) => {
+            const li = document.createElement('li');
+            const rank = document.createElement('span');
+            rank.innerText = `${index + 1}.`;
+            const scoreValue = document.createElement('span');
+            scoreValue.className = 'score';
+            scoreValue.innerText = `${score} Likes`;
+            li.appendChild(rank);
+            li.appendChild(scoreValue);
+            list.appendChild(li);
+        });
+    }
 
-    // Fallback Logic Only
-    let tweets = [
-        `Everyone is talking about ${input} rn.`, `If you don't like ${input}, block me.`,
-        `Just saw ${input} and I'm shaking.`, `${input} is the new meta.`,
-        `Why is ${input} trending?`, `I need more ${input} in my life.`,
-        `${input} szn approachin.`, `Unpopular opinion: ${input} is mid.`,
-        `Imagine not owning ${input}.`, `${input}. That's the tweet.`
-    ];
-
-    await new Promise(r => setTimeout(r, 800));
-    activeTweets = tweets; currentTrend = input;
-    status.innerText = "UPLOAD COMPLETE.";
-    setTimeout(() => { closeOverlay(); startGame(); }, 1000);
-    btn.disabled = false; btn.style.opacity = 1;
+    document.getElementById('main-menu').classList.add('hidden');
+    document.getElementById('leaderboard-menu').classList.remove('hidden');
 }
 
 async function updateShopkeeperBanter() {
@@ -1042,7 +1035,7 @@ async function generateRoast(score) {
 function closeOverlay() {
     document.getElementById('char-select').classList.add('hidden');
     document.getElementById('gun-store').classList.add('hidden');
-    document.getElementById('trend-menu').classList.add('hidden');
+    document.getElementById('leaderboard-menu').classList.add('hidden');
     document.getElementById('main-menu').classList.remove('hidden');
 }
 
@@ -1053,8 +1046,17 @@ function showToast(msg) {
 
 // Save/Load
 function saveGame() {
+    const finalScore = Math.floor(score);
+    currency += finalScore;
+
+    // Update high scores
+    highScores.push(finalScore);
+    highScores.sort((a, b) => b - a); // Sort descending
+    highScores = highScores.slice(0, 10); // Keep only top 10
+
     localStorage.setItem('fs_currency', currency);
     localStorage.setItem('fs_weapons', JSON.stringify(unlockedWeapons));
     localStorage.setItem('fs_char', selectedCharIdx);
     localStorage.setItem('fs_loadout', selectedWeaponId);
+    localStorage.setItem('fs_highscores', JSON.stringify(highScores));
 }

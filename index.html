@@ -49,22 +49,18 @@
                     <button class="btn btn-primary"><i class="fa-solid fa-play"></i> DEPLOY</button>
                     <button class="btn"><i class="fa-solid fa-gun"></i> ARMORY</button>
                     <button class="btn"><i class="fa-solid fa-user-group"></i> OPERATORS</button>
-                    <button class="btn"><i class="fa-solid fa-wand-magic-sparkles"></i> HACK FEED</button>
+                    <button class="btn"><i class="fa-solid fa-trophy"></i> LEADERBOARD</button>
                 </div>
             </div>
         </div>
         
-        <!-- TREND GENERATOR -->
-        <div id="trend-menu" class="overlay hidden">
+        <!-- LEADERBOARD -->
+        <div id="leaderboard-menu" class="overlay hidden">
             <div class="panel">
-                <h2 style="background: linear-gradient(45deg, #FF00FF, #00FFFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">VIRAL CODE INJECTOR</h2>
-                <p style="color:#aaa; margin-bottom: 15px; font-family:'Inter'; font-size:0.9rem;">Inject a topic into the global feed algorithm.</p>
-                <input type="text" id="trend-input" class="ai-input" placeholder="Ex: Cats, Politics..." maxlength="30">
-                <div id="trend-status" style="height: 20px; color: var(--primary); font-weight:bold; margin-bottom: 10px; font-size:0.9rem;"></div>
-                <div class="btn-group">
-                    <button class="btn btn-magic">EXECUTE</button>
-                    <button class="btn">ABORT</button>
-                </div>
+                <h2>HALL OF FAME</h2>
+                <p style="color:#888; margin-bottom: 20px;">Top 10 Operators</p>
+                <ol id="leaderboard-list" class="leaderboard"></ol>
+                <button class="btn">BACK</button>
             </div>
         </div>
 
