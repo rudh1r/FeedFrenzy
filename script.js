@@ -945,6 +945,7 @@ function returnToMenu() {
     document.getElementById('game-over').classList.add('hidden');
     document.getElementById('pause-menu').classList.add('hidden');
     document.getElementById('hud').classList.add('hidden');
+    document.getElementById('main-menu').classList.remove('hidden');
     gameState = 'MENU';
     updateUI();
 }
