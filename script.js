@@ -56,6 +56,7 @@ let unlockedWeapons = JSON.parse(localStorage.getItem('fs_weapons')) || ['pistol
 let selectedCharIdx = parseInt(localStorage.getItem('fs_char')) || 0;
 let selectedWeaponId = localStorage.getItem('fs_loadout') || 'pistol';
 let highScores = JSON.parse(localStorage.getItem('fs_highscores')) || [];
+let activeTweets = [...DEFAULT_TWEETS];
 
 let canvas, ctx;
 let gameState = 'MENU';
