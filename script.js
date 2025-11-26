@@ -207,54 +207,69 @@ function setupMobileControls() {
     const knob = document.getElementById('joystick-knob');
     const shootBtn = document.getElementById('shoot-btn');
     const ultBtn = document.getElementById('ult-btn');
+    let joystickTouchId = null;
 
-    const handleJoystickStart = (x, y) => {
-        joystick.active = true; joystick.originX = x; joystick.originY = y;
-        joystick.x = x; joystick.y = y;
-    };
+    // --- Universal Touch Handlers ---
+    window.addEventListener('touchstart', e => {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            const target = touch.target;
 
-    const handleJoystickMove = (x, y) => {
-        if (!joystick.active) return;
-        let dx = x - joystick.originX; let dy = y - joystick.originY;
-        const dist = Math.sqrt(dx*dx + dy*dy); const max = 60;
-        if (dist > max) { dx = (dx / dist) * max; dy = (dy / dist) * max; }
-        joystick.dx = dx / max; joystick.dy = dy / max;
-        knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-    };
+            if (joystickTouchId === null && (target === base || base.contains(target))) {
+                joystickTouchId = touch.identifier;
+                joystick.active = true;
+                joystick.originX = touch.clientX;
+                joystick.originY = touch.clientY;
+            } else if (target === shootBtn || shootBtn.contains(target)) {
+                aimJoystick.active = true;
+                isMobileShooting = true;
+                shootBtn.style.transform = "scale(0.9)";
+                shootBtn.style.background = "rgba(255, 0, 80, 0.8)";
+            } else if (target === ultBtn || ultBtn.contains(target)) {
+                if (player.ultCharge >= 100) activateSpecial();
+            }
+        }
+    }, { passive: false });
 
-    const handleJoystickEnd = () => {
-        joystick.active = false; joystick.dx = 0; joystick.dy = 0;
-        knob.style.transform = `translate(-50%, -50%)`;
-    };
+    window.addEventListener('touchmove', e => {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if (touch.identifier === joystickTouchId) {
+                let dx = touch.clientX - joystick.originX;
+                let dy = touch.clientY - joystick.originY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const max = 60;
+                if (dist > max) {
+                    dx = (dx / dist) * max;
+                    dy = (dy / dist) * max;
+                }
+                joystick.dx = dx / max;
+                joystick.dy = dy / max;
+                knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            }
+        }
+    }, { passive: false });
 
-    base.addEventListener('touchstart', e => { e.preventDefault(); handleJoystickStart(e.changedTouches[0].clientX, e.changedTouches[0].clientY); }, {passive: false});
-    window.addEventListener('touchmove', e => { if(joystick.active) handleJoystickMove(e.changedTouches[0].clientX, e.changedTouches[0].clientY); }, {passive: false});
-    window.addEventListener('touchend', e => { if(joystick.active) handleJoystickEnd(); });
-
-    base.addEventListener('mousedown', e => { e.preventDefault(); handleJoystickStart(e.clientX, e.clientY); });
-    window.addEventListener('mousemove', e => { if(joystick.active) handleJoystickMove(e.clientX, e.clientY); });
-    window.addEventListener('mouseup', e => { if(joystick.active) handleJoystickEnd(); });
-
-    // --- Aim & Shoot Joystick Logic ---
-    const handleAimStart = (e) => {
-        if(e.cancelable) e.preventDefault();
-        aimJoystick.active = true;
-        isMobileShooting = true;
-        shootBtn.style.transform = "scale(0.9)";
-        shootBtn.style.background = "rgba(255, 0, 80, 0.8)";
-    };
-
-    const handleAimEnd = (e) => {
-        if(e.cancelable) e.preventDefault();
-        aimJoystick.active = false;
-        isMobileShooting = false;
-        shootBtn.style.transform = "scale(1)";
-        shootBtn.style.background = "rgba(255, 0, 80, 0.3)";
-    };
-
-    shootBtn.addEventListener('touchstart', handleAimStart, {passive: false});
-    shootBtn.addEventListener('touchend', handleAimEnd, {passive: false});
-    shootBtn.addEventListener('touchcancel', handleAimEnd, {passive: false});
+    window.addEventListener('touchend', e => {
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+            const touch = e.changedTouches[i];
+            if (touch.identifier === joystickTouchId) {
+                joystickTouchId = null;
+                joystick.active = false;
+                joystick.dx = 0;
+                joystick.dy = 0;
+                knob.style.transform = `translate(-50%, -50%)`;
+            } else { // Check if it was a shoot or ult touch
+                aimJoystick.active = false;
+                isMobileShooting = false;
+                shootBtn.style.transform = "scale(1)";
+                shootBtn.style.background = "rgba(255, 0, 80, 0.3)";
+            }
+        }
+    }, { passive: false });
 
     const triggerUlt = (e) => { if(e.cancelable) e.preventDefault(); if(player.ultCharge >= 100) activateSpecial(); };
     ultBtn.addEventListener('touchstart', triggerUlt, {passive: false});
